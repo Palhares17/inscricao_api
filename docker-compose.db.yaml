@@ -1,0 +1,25 @@
+name: mymobiconfapi
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: mmc-database-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
+    volumes:
+      - mmc-data:${POSTGRES_DATA_PATH}
+    networks:
+      - mymobiconf-dev-network
+
+networks:
+  mymobiconf-dev-network:
+    external: true
+
+volumes:
+  mmc-data:
+    external: true
+    name: mymobiconfapi_mmc-data
