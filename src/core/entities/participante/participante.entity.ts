@@ -29,6 +29,7 @@ import { TokenRecuperacaoSenha } from '../recuperacao/token-recuperacao-senha.en
 import { QrCodeConfirmacaoPresenca } from '../qrcode/qrcode_confirmacao_presenca';
 import { ParticipanteFCMToken } from './participante-fcm-token.entity';
 import { ParticipanteConexoes } from './participante-conexoes.entity';
+import { Inscricao } from '../inscricao/inscricao.entity';
 
 @Entity('participante')
 export class Participante extends BaseEntity {
@@ -132,4 +133,7 @@ export class Participante extends BaseEntity {
     (participanteConexao) => participanteConexao.destinatario,
   )
   conexoesRecebidas: Participante[];
+
+  @OneToMany(() => Inscricao, (inscricao) => inscricao.participante)
+  inscricoes: Inscricao[];
 }

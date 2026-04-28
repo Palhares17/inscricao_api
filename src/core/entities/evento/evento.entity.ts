@@ -28,6 +28,10 @@ import { GaleriaImagem } from '../galeria/galeria-imagem.entity';
 import { EventoConfiguracoes } from './evento-configuracoes.entity';
 import { EventoCacheVersion } from './evento-cache-version.entity';
 import { EventoCodigo } from './evento-codigo.entity';
+import { InscricaoModalidade } from '../inscricao/inscricao-modalidade.entity';
+import { InscricaoExtra } from '../inscricao/inscricao-extra.entity';
+import { Inscricao } from '../inscricao/inscricao.entity';
+import { CertificadoModelo } from '../certificado/certificado-modelo.entity';
 
 @Entity('evento')
 export class Evento extends BaseEntity {
@@ -149,4 +153,16 @@ export class Evento extends BaseEntity {
 
   @OneToOne('evento_codigo', 'evento')
   codigo: EventoCodigo;
+
+  @OneToMany(() => InscricaoModalidade, (modalidade) => modalidade.evento)
+  modalidadesInscricao: InscricaoModalidade[];
+
+  @OneToMany(() => InscricaoExtra, (extra) => extra.evento)
+  extras: InscricaoExtra[];
+
+  @OneToMany(() => Inscricao, (inscricao) => inscricao.evento)
+  inscricoes: Inscricao[];
+
+  @OneToOne(() => CertificadoModelo, (modelo) => modelo.evento)
+  certificadoModelo: CertificadoModelo;
 }
