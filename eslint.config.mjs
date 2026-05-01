@@ -26,11 +26,74 @@ export default tseslint.config(
   },
   {
     rules: {
+      '@typescript-eslint/interface-name-prefix': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      'prettier/prettier': ['error', { endOfLine: 'auto' }],
-      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-underscore-dangle': 'off',
+      'no-param-reassign': [
+        'error',
+        {
+          props: true,
+          ignorePropertyModificationsFor: ['_opts'],
+        },
+      ],
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'variableLike',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+          filter: {
+            regex: '^npm_',
+            match: false,
+          },
+        },
+        {
+          selector: 'variable',
+          modifiers: ['const'],
+          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          leadingUnderscore: 'allow',
+          filter: {
+            regex: '^npm_',
+            match: false,
+          },
+        },
+        { selector: 'typeLike', format: ['PascalCase'] },
+        {
+          selector: 'interface',
+          format: ['PascalCase'],
+          custom: {
+            regex: '^I[A-Z]',
+            match: false,
+          },
+        },
+        { selector: 'enumMember', format: ['UPPER_CASE'] },
+      ],
+      'unused-imports/no-unused-imports': 'warn',
+      'unused-imports/no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+        },
+      ],
+      'import/order': 'off',
+      'sort-imports-es6-autofix/sort-imports-es6': [
+        'warn',
+        {
+          ignoreCase: false,
+          ignoreMemberSort: false,
+          memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
+        },
+      ],
+      // For Typescript, it is better not to use default export: https://stackoverflow.com/a/33307487/11440474
+      'import/prefer-default-export': 'off',
+      'import/extensions': 'off',
+      'class-methods-use-this': 'off',
     },
   },
 );

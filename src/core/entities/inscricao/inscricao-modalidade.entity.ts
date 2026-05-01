@@ -34,7 +34,7 @@ export class InscricaoModalidade extends BaseEntity {
   gratuito: boolean;
 
   @Column('decimal', { precision: 10, scale: 2, nullable: true })
-  preco: number;
+  preco: number | null;
 
   @Column()
   vagas: number;
@@ -49,7 +49,7 @@ export class InscricaoModalidade extends BaseEntity {
   dataFimVenda: Date;
 
   @Column({ type: 'text', nullable: true })
-  documentosExigidos: string;
+  documentosExigidos: string | null;
 
   @Column({
     type: 'enum',
@@ -57,7 +57,7 @@ export class InscricaoModalidade extends BaseEntity {
     array: true,
     nullable: true,
   })
-  metodosPagamento: MetodoPagamentoEnum[];
+  metodosPagamento: MetodoPagamentoEnum[] | null;
 
   @Column()
   @CreateDateColumn()

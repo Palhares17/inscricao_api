@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizadorJwtStrategy } from './strategies/organizador-jwt.strategy';
-import { OrganizadorGuard } from '../guards/organizador.guard';
+import { OrganizadorAuthGuard } from '../guards/organizador-auth.guard';
+import { ClienteOrganizadores } from '../entities/cliente/cliente-organizadores.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([ClienteOrganizadores]),
     PassportModule.register({ defaultStrategy: 'organizador' }),
     JwtModule.registerAsync({
       useFactory: () => ({
@@ -14,7 +17,7 @@ import { OrganizadorGuard } from '../guards/organizador.guard';
       global: true,
     }),
   ],
-  providers: [OrganizadorJwtStrategy, OrganizadorGuard],
-  exports: [OrganizadorGuard, JwtModule, PassportModule],
+  providers: [OrganizadorJwtStrategy, OrganizadorAuthGuard],
+  exports: [OrganizadorAuthGuard, JwtModule, PassportModule],
 })
 export class AuthModule {}
