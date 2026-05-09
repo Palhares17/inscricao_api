@@ -24,13 +24,13 @@ export class InscricaoExtra extends BaseEntity {
   nome: string;
 
   @Column({ type: 'text', nullable: true })
-  descricao: string;
+  descricao: string | null;
 
   @Column()
   gratuito: boolean;
 
   @Column('decimal', { precision: 10, scale: 2, nullable: true })
-  preco: number;
+  preco: number | null;
 
   @Column()
   vagas: number;
@@ -39,7 +39,7 @@ export class InscricaoExtra extends BaseEntity {
   vaiTerCertificado: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
-  cargaHoraria: Date;
+  cargaHoraria: Date | null;
 
   @Column({ default: 0 })
   vagasUtilizadas: number;

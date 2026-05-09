@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -71,9 +72,9 @@ export class RegisterController {
   @ApiResponse({ status: 404, description: 'Evento não encontrado.' })
   findAllRestiter(
     @Param('eventoId', ParseUUIDPipe) eventoId: string,
-    @Body() paginationDto: PaginationDto,
+    @Query() paginacaoDTO: PaginationDto
   ) {
-    return this.registerService.findRegisters(paginationDto, eventoId);
+    return this.registerService.findRegisters(paginacaoDTO, eventoId);
   }
 
   @Patch('modalidade/:modalidadeId')
