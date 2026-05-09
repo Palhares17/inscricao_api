@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { EventsService } from './eventos.service';
 import { Evento } from '../../core/entities/evento/evento.entity';
 
@@ -9,5 +9,10 @@ export class EventsController {
   @Get()
   findAll(): Promise<Evento[]> {
     return this.eventsService.findAll();
+  }
+
+  @Get(':eventoId')
+  findOne(@Param('eventoId', ParseUUIDPipe) eventoId: string): Promise<Evento> {
+    return this.eventsService.findOne(eventoId);
   }
 }
