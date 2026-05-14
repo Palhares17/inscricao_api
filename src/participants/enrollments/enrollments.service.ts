@@ -108,10 +108,10 @@ export class EnrollmentsService {
     });
   }
 
-  async findOne(inscricaoId: string) {
+  async findOne(inscricaoId: string, participantId: string) {
     const enrollment = await this.enrollmentRepo.findOne({
-      where: { id: inscricaoId },
-      relations: ['participante', 'modalidade'],
+      where: { id: inscricaoId, participanteId: participantId },
+      relations: ['modalidade', 'evento', 'certificado'],
     });
     if (!enrollment) {
       throw new NotFoundException('Inscrição não encontrada.');

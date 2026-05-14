@@ -42,7 +42,10 @@ export class EnrollmentsController {
 
   @Get('participante/inscricao/:inscricaoId')
   @UseGuards(ParticipanteAuthGuard)
-  findOne(@Param('inscricaoId', ParseUUIDPipe) enrollmentId: string) {
-    return this.enrollmentsService.findOne(enrollmentId);
+  findOne(
+    @Param('inscricaoId', ParseUUIDPipe) enrollmentId: string,
+    @GetUser() participant: Participante,
+  ) {
+    return this.enrollmentsService.findOne(enrollmentId, participant.id);
   }
 }
