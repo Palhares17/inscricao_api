@@ -35,6 +35,7 @@ pnpm run db:logs              # follow Postgres logs
 # migrations (TypeORM CLI via typeorm-ts-node-commonjs)
 pnpm run typeorm -- <cmd>     # generic entry, points at src/core/database/data-source.ts
 pnpm run migration:generate   # writes ./src/core/database/migrations/migration<timestamp>.ts
+pnpm run migration:run        # apply pending migrations
 ```
 
 Unit and e2e have **different jest configs** — the `jest` block in `package.json` drives `pnpm run test` (rootDir `src/`, picks up `*.spec.ts`); `test/jest-e2e.json` drives `pnpm run test:e2e` (rootDir is the repo root, picks up `*.e2e-spec.ts`). A spec under `test/` is invisible to `pnpm run test`, and a spec under `src/` is invisible to e2e.
@@ -49,56 +50,86 @@ NestJS 11 HTTP service (Express platform) backed by Postgres via TypeORM 0.3, wi
 
 - Hardcoded `app.listen(3333)` — `PORT`/`GUEST_PORT`/`HOST_PORT` env vars are **inert**. Change the literal in `main.ts` if you need a different port.
 - `app.setGlobalPrefix('api')` — every controller route is served under `/api/...`.
+- Global `ValidationPipe` with `{ whitelist: true, transform: true, forbidNonWhitelisted: true }` — DTOs must declare every accepted field via `class-validator` decorators, and unknown fields cause `400`. `transform: true` activates implicit type coercion (e.g. `ParseUUIDPipe`-friendly behavior, `enum` parsing from strings).
 - Swagger UI is mounted at `/docs` with bearer auth scheme name `'access-token'` (use `@ApiBearerAuth('access-token')` on protected routes so the Swagger "Authorize" button targets the right scheme).
 
 ### Module graph (`src/app.module.ts`)
 
 Three feature roots plus the global core layer:
 
-- `AuthModule` (`src/core/auth/`) — global JWT (`JwtModule.registerAsync({ global: true })`) + Passport with `defaultStrategy: 'organizador'`. Exports `OrganizadorGuard`, `JwtModule`, `PassportModule` so feature modules can `imports: [AuthModule]` to get auth context.
-- `ParticipantsModule` (`src/participants/`) — public-facing participant endpoints. Currently wires `EventosModule` (`GET /api/eventos`).
-- `OrganizersModule` (`src/organizers/`) — admin/back-office endpoints. Currently wires `ClientModule` (`GET /api/organizers/client/me`, guarded by role).
+- **`AuthModule`** (`src/core/auth/auth.module.ts`) — global `JwtModule.registerAsync({ global: true })` + `PassportModule.register({ defaultStrategy: 'organizador' })`. Registers only the `OrganizadorJwtStrategy` and `OrganizadorAuthGuard` providers; exports `OrganizadorAuthGuard`, `JwtModule`, `PassportModule`. The participant strategy is registered in a *different* module (see below) — this module is organizer-side only despite the generic name.
+- **`ParticipantsModule`** (`src/participants/participants.module.ts`) — wires `EventosModule`, `EnrollmentsModule`, `AuthModule` (participant-side, see below), and `ParticipantModule`. Participant signup/signin lives here, not in the core `AuthModule`.
+- **`OrganizersModule`** (`src/organizers/organizers.module.ts`) — wires `ClientModule`, `RegisterModule`, `ExtrasModule`, `EnrollmentsModule` (organizer-facing list/manage views over the same `Inscricao` entity used by participants).
 
-New feature modules go under `src/<area>/<sub-area>/` and are imported into either `Participants`/`Organizers` (or directly into `AppModule` for cross-cutting roots).
+New feature modules go under `src/<area>/<sub-area>/` and are imported into either `ParticipantsModule` / `OrganizersModule` (or directly into `AppModule` for cross-cutting roots).
 
 ### Core layer (`src/core/`)
 
 Shared infra that other modules depend on:
 
-- `database/data-source.ts` — exports both the `DataSourceOptions` (consumed by `TypeOrmModule.forRoot`) and a default `DataSource` instance (consumed by the TypeORM CLI). `synchronize: false`; entities are registered via the barrel below; `migrations` glob points at `src/core/database/migrations/*.{ts,js}` — **this directory does not exist yet** and will be created by the first `migration:generate` run.
+- `database/data-source.ts` — exports both the `DataSourceOptions` (consumed by `TypeOrmModule.forRoot`) and a default `DataSource` instance (consumed by the TypeORM CLI). Reads `POSTGRES_HOST` / `POSTGRES_PORT` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` / `POSTGRES_SSL` from `.env`. `synchronize: false`; entities are registered via the barrel below; `migrations` glob points at `src/core/database/migrations/*.{ts,js}`.
 - `entities/entities.ts` — single barrel re-exporting every TypeORM entity as the `entities` array. **All new entities must be appended here** or TypeORM won't see them at runtime or migration-generation time. Entities themselves are organized by aggregate (`evento/`, `participante/`, `cliente/`, `inscricao/`, `atividade/`, `gamificacao/`, `qrcode/`, `galeria/`, `questionario/`, `certificado/`, `recuperacao/`, `endereco/`, `duvida/`, `tag/`).
-- `auth/strategies/organizador-jwt.strategy.ts` — Passport JWT strategy named `'organizador'`. **Throws at construction time if `JWT_SECRET` is unset**, so the app will refuse to boot without it. `validate()` returns the decoded `JwtPayload` (`sub`, `role`) directly — that becomes `request.user`.
-- `guards/organizador.guard.ts` — RBAC guard. Reads `request.user`, asserts the role is in `OrganizadorRolesEnum` (`admin`, `organizador`, `chair`), and intersects with the `@Roles(...)` metadata on the handler. **Note**: there is currently a near-duplicate at `src/core/auth/guards/organizador.guard.ts` exported from `AuthModule.providers`; the rest of the codebase (controllers and `client.controller.ts`) imports the one at `src/core/guards/organizador.guard.ts`. Treat the `core/guards/` copy as canonical and prefer collapsing the duplicate over forking it further.
-- `decorators/roles.decorator.ts` — `@Roles(...OrganizadorRolesEnum[])` writes the `'roles'` metadata key the guard reads.
-- `decorators/user.decorator.ts` — `@GetUser() user: JwtPayload` param decorator pulls the JWT payload off the request.
-- `types/jwt-payload.type.ts` — `{ sub: string; role: string; iat?, exp? }`. The strategy does not currently issue tokens itself; an external service is expected to mint JWTs that match this shape.
-- `enum/` — `organizador-roles.enum.ts` (RBAC) and `metodo-pagamento.enum.ts`.
+- `modules/crypto/crypto.service.ts` — provides `criptografaMaoUnica` (SHA hash, one-way: passwords) and `criptografaMaoDupla` / `descriptografaMaoDupla` (AES cipher: PII like email and name). Reads `CRYPTO_SHA_ALGORITHM`, `CRYPTO_AES_ALGORITHM`, `CRYPTO_AES_KEY`, `CRYPTO_AES_IV` from `.env`. Currently consumed by the participant-side `AuthService` (signup/signin compare and store encrypted values, **not** raw values).
+- `decorators/user.decorator.ts` — `@GetUser()` param decorator. Returns `request.user` typed as `any` (declare the destination type at the call site). What ends up there depends on which strategy authenticated the request — see "Auth strategies" below.
+- `decorators/roles.decorator.ts` — `@Roles(...OrganizadorRolesEnum[])` writes the `'roles'` metadata key the organizer guard reads.
+- `types/jwt-payload.type.ts` — `{ sub: string; role: string; iat?, exp? }`. Note: neither strategy actually returns this type any more (both do a DB lookup and return entities); this interface mostly documents the wire format.
+- `enum/` — `organizador-roles.enum.ts` (RBAC: `admin`, `organizador`, `chair`) and `metodo-pagamento.enum.ts`.
 
-### Auth/RBAC pattern for new routes
+### Auth strategies (`src/core/auth/strategies/` + `src/core/guards/`)
 
-Use the stack already proven in `src/organizers/client/client.controller.ts`:
+Two parallel Passport strategies. **Each one performs a DB lookup in `validate()` and returns a full entity** — `request.user` is not a JWT payload at the handler level.
+
+- **`OrganizadorJwtStrategy`** (name `'organizador'`, default strategy globally). On every authenticated request: loads `ClienteOrganizadores` by `payload.sub` with the `role` relation; rejects if missing, `ativo === false`, or has no role. Returns the `ClienteOrganizadores` entity. Throws at construction time if `JWT_SECRET` is unset.
+- **`ParticipanteJwtStrategy`** (name `'participante'`). On every authenticated request: calls `ParticipantService.findById(payload.sub)`; rejects if missing. Returns the `Participante` entity. Registered in `src/participants/auth/auth.module.ts`, not the core `AuthModule`. Also throws at construction time if `JWT_SECRET` is unset.
+
+The matching guards both authenticate *and* authorize in one step:
+
+- **`OrganizadorAuthGuard`** (`src/core/guards/organizador-auth.guard.ts`) extends `AuthGuard('organizador')`. After the strategy populates `request.user`, its `handleRequest` cross-references `@Roles(...)` metadata against `user.role.nome` and throws `403` on mismatch. So one `@UseGuards(OrganizadorAuthGuard)` decorator covers both JWT verification and RBAC.
+- **`ParticipanteAuthGuard`** (`src/core/guards/participante-auth.guard.ts`) extends `AuthGuard('participante')`. JWT-verify-only; there is no role concept on the participant side.
+
+### Auth/RBAC patterns
+
+**Organizer route (JWT + role check):**
 
 ```ts
-@UseGuards(OrganizadorGuard)
+@UseGuards(OrganizadorAuthGuard)
 @Roles(OrganizadorRolesEnum.Admin)
 @Controller('organizers/client')
 export class ClientController {
   @Get('me')
-  findMe(@GetUser() user: JwtPayload) { ... }
+  findMe(@GetUser() user: ClienteOrganizadores) {
+    return this.clientService.findOrganizadorById(user.id);
+  }
 }
 ```
 
-The guard does **not** authenticate — it only authorizes a request whose `user` was already populated by the `'organizador'` Passport strategy (which is the global `defaultStrategy`). If a route needs JWT verification before the role check, apply Passport's `AuthGuard('organizador')` (or rely on the default strategy via your own composite guard) **before** `OrganizadorGuard`.
+**Participant route (JWT only):**
+
+```ts
+@Controller('eventos/:eventoId')
+export class EnrollmentsController {
+  @Post('inscricao')
+  @UseGuards(ParticipanteAuthGuard)
+  create(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @GetUser() participant: Participante,
+    @Body() dto: CreateEnrollmentDto,
+  ) { ... }
+}
+```
+
+### JWT issuance
+
+JWTs are minted **in-process** by `src/participants/auth/auth.service.ts` — `signUp`, `singIn` (note typo in method name), and `refreshToken` all use `JwtService.sign({ sub })`. Access tokens expire in `1d`, refresh tokens in `3d`. Refresh uses `jwtService.verify` against the same `JWT_SECRET` — there is currently **no separate refresh secret and no refresh-token rotation/blacklist**. Email is AES-encrypted before being stored or compared; password is SHA-hashed (one-way). There is no organizer-side signup endpoint yet — organizer JWTs are presumed minted by an external/admin flow that has not been built into this codebase.
 
 ### Reserved/unused config
 
-- `.env` defines `CRYPTO_SHA_ALGORITHM`, `CRYPTO_AES_ALGORITHM`, `CRYPTO_AES_KEY`, `CRYPTO_AES_IV` — no consumer yet; reserved for an upcoming crypto utility.
-- `SSL` and `SWAGGER_ENABLED` env vars are declared but not read anywhere; Swagger is currently always-on.
-- `GUEST_PORT`/`HOST_PORT` (see Bootstrap note above) are inert.
+- `SWAGGER_ENABLED` env var is declared in `.env` but never read; Swagger is always-on.
+- `PORT` / `GUEST_PORT` / `HOST_PORT` are inert (see Bootstrap note).
 
 ## Conventions
 
-- **Domain naming is Portuguese** (`Evento`, `Participante`, `Inscricao`, `Atividade`, `OrganizadorRolesEnum`); module/service/file names mostly track that (`eventos.module.ts`, `participante.entity.ts`). Module *roots* exposed to wiring are English (`OrganizersModule`, `ParticipantsModule`). Match the locale of the surrounding code rather than translating.
+- **Domain naming is Portuguese** (`Evento`, `Participante`, `Inscricao`, `Atividade`, `OrganizadorRolesEnum`); module/service/file names mostly track that (`eventos.module.ts`, `participante.entity.ts`). Module *roots* exposed to wiring are English (`OrganizersModule`, `ParticipantsModule`, `EnrollmentsModule`). Service method names sometimes mix locales too (e.g. `criptografaMaoUnica`, `findOrganizadorById`) — match the locale of the surrounding code rather than translating.
 - **TypeScript**: `module: nodenext`, `target: ES2023`, `strictNullChecks: true`, but `noImplicitAny: false`, `strictBindCallApply: false`, `strictPropertyInitialization: false` — intentionally loose so TypeORM entity classes don't need definite-assignment assertions on every column.
 - **ESLint**: `typescript-eslint` recommendedTypeChecked + prettier. `@typescript-eslint/no-explicit-any` is **off**; `no-floating-promises` and `no-unsafe-argument` are **warn**. `endOfLine: auto` keeps Windows checkouts from erroring.
 - **Prettier**: single quotes, trailing commas `all`.

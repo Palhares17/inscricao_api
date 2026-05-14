@@ -1,34 +1,48 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { EnrollmentsService } from './enrollments.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
-import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
+import { GetUser } from 'src/core/decorators/user.decorator';
+import { Participante } from 'src/core/entities/participante/participante.entity';
+import { ParticipanteAuthGuard } from 'src/core/guards/participante-auth.guard';
 
-@Controller('enrollments')
+@ApiTags('Inscrições')
+@ApiBearerAuth('access-token')
+@Controller('')
 export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
 
-  @Post()
-  create(@Body() createEnrollmentDto: CreateEnrollmentDto) {
-    return this.enrollmentsService.create(createEnrollmentDto);
+  @Post('eventos/:eventoId/inscricao')
+  @UseGuards(ParticipanteAuthGuard)
+  create(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @GetUser() participant: Participante,
+    @Body() createEnrollmentDto: CreateEnrollmentDto,
+  ) {
+    return this.enrollmentsService.create(
+      eventId,
+      participant.id,
+      createEnrollmentDto,
+    );
   }
 
-  @Get()
-  findAll() {
-    return this.enrollmentsService.findAll();
+  @Get('participante/inscricoes')
+  @UseGuards(ParticipanteAuthGuard)
+  findAll(@GetUser() participant: Participante) {
+    return this.enrollmentsService.findAll(participant.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.enrollmentsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEnrollmentDto: UpdateEnrollmentDto) {
-    return this.enrollmentsService.update(+id, updateEnrollmentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.enrollmentsService.remove(+id);
+  @Get('participante/inscricao/:inscricaoId')
+  @UseGuards(ParticipanteAuthGuard)
+  findOne(@Param('inscricaoId', ParseUUIDPipe) enrollmentId: string) {
+    return this.enrollmentsService.findOne(enrollmentId);
   }
 }
