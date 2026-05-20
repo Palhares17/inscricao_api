@@ -2,13 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { RegisterService } from './register.service';
 import { CreateRegisterDto } from './dto/create-register.dto';
 import { InscricaoModalidade } from 'src/core/entities/inscricao/inscricao-modalidade.entity';
 import { Evento } from 'src/core/entities/evento/evento.entity';
 import { MetodoPagamentoEnum } from 'src/core/enum/metodo-pagamento.enum';
+import { CategoryService } from './category.service';
 
-type MockRepo<T extends object> = Partial<Record<keyof Repository<T>, jest.Mock>>;
+type MockRepo<T extends object> = Partial<
+  Record<keyof Repository<T>, jest.Mock>
+>;
 
 const buildBaseDto = (
   overrides: Partial<CreateRegisterDto> = {},
@@ -25,8 +27,8 @@ const buildBaseDto = (
   ...overrides,
 });
 
-describe('RegisterService', () => {
-  let service: RegisterService;
+describe('CategoryService', () => {
+  let service: CategoryService;
   let registerRepo: MockRepo<InscricaoModalidade>;
   let eventoRepo: MockRepo<Evento>;
 
@@ -43,7 +45,7 @@ describe('RegisterService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        RegisterService,
+        CategoryService,
         {
           provide: getRepositoryToken(InscricaoModalidade),
           useValue: registerRepo,
@@ -52,7 +54,7 @@ describe('RegisterService', () => {
       ],
     }).compile();
 
-    service = module.get<RegisterService>(RegisterService);
+    service = module.get<CategoryService>(CategoryService);
   });
 
   it('deve estar definido', () => {

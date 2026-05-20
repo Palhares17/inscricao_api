@@ -13,10 +13,10 @@ import { IPaginatedResult } from 'src/core/utils/pagination.interface';
 import { UpdateRegisterDto } from './dto/update-register.dto';
 
 @Injectable()
-export class RegisterService {
+export class CategoryService {
   constructor(
     @InjectRepository(InscricaoModalidade)
-    private readonly registerRepo: Repository<InscricaoModalidade>,
+    private readonly categoryRepo: Repository<InscricaoModalidade>,
     @InjectRepository(Evento)
     private readonly eventoRepository: Repository<Evento>,
   ) {}
@@ -87,8 +87,8 @@ export class RegisterService {
       documentosExigidos: createRegisterDto.documentosExigidos ?? null,
       metodosPagamento: isPaid ? createRegisterDto.metodosPagamento! : null,
     };
-    const modalidade = this.registerRepo.create(data);
-    const saved = await this.registerRepo.save(modalidade);
+    const modalidade = this.categoryRepo.create(data);
+    const saved = await this.categoryRepo.save(modalidade);
 
     return {
       data: {
@@ -124,7 +124,7 @@ export class RegisterService {
       search,
     } = paginationDto;
 
-    const [items, total] = await this.registerRepo.findAndCount({
+    const [items, total] = await this.categoryRepo.findAndCount({
       where: {
         eventoId,
         nome: search ? ILike(`%${search}%`) : undefined,
@@ -157,7 +157,7 @@ export class RegisterService {
       throw new NotFoundException('Evento não encontrado.');
     }
 
-    const modalidade = await this.registerRepo.findOne({
+    const modalidade = await this.categoryRepo.findOne({
       where: { id: modalidadeId, eventoId },
     });
     if (!modalidade) {
@@ -210,7 +210,7 @@ export class RegisterService {
       }
     }
 
-    return this.registerRepo.save({ ...modalidade, ...updateRegister });
+    return this.categoryRepo.save({ ...modalidade, ...updateRegister });
   }
 
   async deleteRegister(eventoId: string, modalidadeId: string) {
@@ -221,7 +221,7 @@ export class RegisterService {
       throw new NotFoundException('Evento não encontrado.');
     }
 
-    const modalidade = await this.registerRepo.findOne({
+    const modalidade = await this.categoryRepo.findOne({
       where: { id: modalidadeId, eventoId },
     });
     if (!modalidade) {
@@ -230,6 +230,6 @@ export class RegisterService {
       );
     }
 
-    await this.registerRepo.remove(modalidade);
+    await this.categoryRepo.remove(modalidade);
   }
 }

@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Generated,
   Index,
   JoinColumn,
   ManyToOne,
@@ -42,7 +43,8 @@ export class Inscricao extends BaseEntity {
   @Column({ type: 'timestamp', nullable: true })
   expiraEm: Date;
 
-  @Column({ unique: true, nullable: true })
+  @Column('uuid', { unique: true, nullable: true })
+  @Generated('uuid')
   qrCodeToken: string;
 
   @Column({ default: false })

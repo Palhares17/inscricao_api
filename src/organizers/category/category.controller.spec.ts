@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RegisterController } from './register.controller';
-import { RegisterService } from './register.service';
 import { CreateRegisterDto } from './dto/create-register.dto';
 import { MetodoPagamentoEnum } from 'src/core/enum/metodo-pagamento.enum';
+import { CategoryController } from './category.controller';
+import { CategoryService } from './category.service';
 
-describe('RegisterController', () => {
-  let controller: RegisterController;
-  let service: jest.Mocked<Pick<RegisterService, 'createRegister'>>;
+describe('CategoryController', () => {
+  let controller: CategoryController;
+  let service: jest.Mocked<Pick<CategoryService, 'createRegister'>>;
 
   beforeEach(async () => {
     service = {
@@ -14,11 +14,11 @@ describe('RegisterController', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [RegisterController],
-      providers: [{ provide: RegisterService, useValue: service }],
+      controllers: [CategoryController],
+      providers: [{ provide: CategoryService, useValue: service }],
     }).compile();
 
-    controller = module.get<RegisterController>(RegisterController);
+    controller = module.get<CategoryController>(CategoryController);
   });
 
   it('deve estar definido', () => {

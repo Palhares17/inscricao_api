@@ -40,7 +40,7 @@ import { PaginationDto } from 'src/core/utils/pagination.dto';
   status: 403,
   description: 'Usuário não tem permissão para esta operação.',
 })
-@Controller('eventos/:eventoId')
+@Controller(':eventoId')
 export class ExtrasController {
   constructor(private readonly extrasService: ExtrasService) {}
 

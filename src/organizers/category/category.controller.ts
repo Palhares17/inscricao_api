@@ -17,13 +17,13 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { RegisterService } from './register.service';
 import { CreateRegisterDto } from './dto/create-register.dto';
 import { OrganizadorRolesEnum } from 'src/core/enum/organizador-roles.enum';
 import { Roles } from 'src/core/decorators/roles.decorator';
 import { OrganizadorAuthGuard } from 'src/core/guards/organizador-auth.guard';
 import { PaginationDto } from 'src/core/utils/pagination.dto';
 import { UpdateRegisterDto } from './dto/update-register.dto';
+import { CategoryService } from './category.service';
 
 @ApiTags('Modalidades de Inscrição')
 @ApiBearerAuth('access-token')
@@ -34,9 +34,9 @@ import { UpdateRegisterDto } from './dto/update-register.dto';
 })
 @ApiResponse({ status: 401, description: 'Token ausente, inválido ou expirado.' })
 @ApiResponse({ status: 403, description: 'Usuário não tem permissão para esta operação.' })
-@Controller('eventos/:eventoId')
-export class RegisterController {
-  constructor(private readonly registerService: RegisterService) {}
+@Controller(':eventoId')
+export class CategoryController {
+  constructor(private readonly categoryService: CategoryService) {}
 
   @Post('modalidade')
   @UseGuards(OrganizadorAuthGuard)
@@ -57,7 +57,7 @@ export class RegisterController {
     @Param('eventoId', ParseUUIDPipe) eventoId: string,
     @Body() createRegisterDto: CreateRegisterDto,
   ) {
-    return this.registerService.createRegister(eventoId, createRegisterDto);
+    return this.categoryService.createRegister(eventoId, createRegisterDto);
   }
 
   @Get('modalidades')
@@ -74,7 +74,7 @@ export class RegisterController {
     @Param('eventoId', ParseUUIDPipe) eventoId: string,
     @Query() paginacaoDTO: PaginationDto
   ) {
-    return this.registerService.findRegisters(paginacaoDTO, eventoId);
+    return this.categoryService.findRegisters(paginacaoDTO, eventoId);
   }
 
   @Patch('modalidade/:modalidadeId')
@@ -102,7 +102,7 @@ export class RegisterController {
     @Param('modalidadeId', ParseUUIDPipe) modalidadeId: string,
     @Body() updateRegisterDto: UpdateRegisterDto,
   ) {
-    return this.registerService.updateRegister(
+    return this.categoryService.updateRegister(
       eventoId,
       modalidadeId,
       updateRegisterDto,
@@ -127,6 +127,6 @@ export class RegisterController {
     @Param('eventoId', ParseUUIDPipe) eventoId: string,
     @Param('modalidadeId', ParseUUIDPipe) modalidadeId: string,
   ) {
-    return this.registerService.deleteRegister(eventoId, modalidadeId);
+    return this.categoryService.deleteRegister(eventoId, modalidadeId);
   }
 }

@@ -16,11 +16,11 @@ import { ParticipanteAuthGuard } from 'src/core/guards/participante-auth.guard';
 
 @ApiTags('Inscrições')
 @ApiBearerAuth('access-token')
-@Controller('')
+@Controller('inscricoes')
 export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
 
-  @Post('eventos/:eventoId/inscricao')
+  @Post('/:eventoId/inscricao')
   @UseGuards(ParticipanteAuthGuard)
   create(
     @Param('eventoId', ParseUUIDPipe) eventId: string,
@@ -34,13 +34,13 @@ export class EnrollmentsController {
     );
   }
 
-  @Get('participante/inscricoes')
+  @Get('/participante')
   @UseGuards(ParticipanteAuthGuard)
   findAll(@GetUser() participant: Participante) {
     return this.enrollmentsService.findAll(participant.id);
   }
 
-  @Get('participante/inscricao/:inscricaoId')
+  @Get('/:inscricaoId')
   @UseGuards(ParticipanteAuthGuard)
   findOne(
     @Param('inscricaoId', ParseUUIDPipe) enrollmentId: string,
@@ -48,4 +48,6 @@ export class EnrollmentsController {
   ) {
     return this.enrollmentsService.findOne(enrollmentId, participant.id);
   }
+
+  // remover inscrição (cancelar)
 }
