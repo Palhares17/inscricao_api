@@ -27,7 +27,10 @@ import { OrganizadorRolesEnum } from 'src/core/enum/organizador-roles.enum';
   description: 'UUID do evento ao qual o credenciamento pertence.',
   format: 'uuid',
 })
-@ApiResponse({ status: 401, description: 'Token ausente, inválido ou expirado.' })
+@ApiResponse({
+  status: 401,
+  description: 'Token ausente, inválido ou expirado.',
+})
 @ApiResponse({
   status: 403,
   description: 'Usuário não tem permissão para esta operação.',
@@ -39,7 +42,8 @@ export class CheckInController {
   @Post('validar')
   @UseGuards(OrganizadorAuthGuard)
   @ApiOperation({
-    summary: 'Valida um QR code de credenciamento e retorna os dados do inscrito.',
+    summary:
+      'Valida um QR code de credenciamento e retorna os dados do inscrito.',
     description:
       'Procura a inscrição pelo `qrCodeToken` amarrado ao `eventoId` da URL. Retorna nome, modalidade e status atual do credenciamento. Não altera estado.',
   })
@@ -67,7 +71,10 @@ export class CheckInController {
     description:
       'Marca `credenciamentoRealizado = true` e preenche `credenciamentoEm`. Retorna `400` se o credenciamento já tiver sido realizado.',
   })
-  @ApiResponse({ status: 200, description: 'Credenciamento confirmado com sucesso.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Credenciamento confirmado com sucesso.',
+  })
   @ApiResponse({
     status: 400,
     description:
@@ -82,5 +89,34 @@ export class CheckInController {
     @Body() createCheckInDto: CreateCheckInDto,
   ) {
     return this.checkInService.confirm(eventId, createCheckInDto);
+  }
+
+  @Post('/extra/:extraId/validar')
+  @UseGuards(OrganizadorAuthGuard)
+  @ApiOperation({
+    summary: 'Valida um QR code de credenciamento para um extra específico.',
+    description:
+      'Procura a inscrição pelo `qrCodeToken` amarrado ao `eventoId` e `extraId` da URL. Retorna nome, modalidade e status atual do credenciamento para aquele extra. Não altera estado.',
+  })
+  @ApiResponse({ status: 200, description: 'Inscrição encontrada e validada.' })
+  @ApiResponse({
+    status: 400,
+    description: 'QR code inválido ou inscrição não confirmada para o extra.',
+  })
+  @ApiResponse({
+    status: 404,
+    description:
+      'Evento, extra ou inscrição não encontrada para o QR code informado.',
+  })
+  validateExtra(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Param('extraId', ParseUUIDPipe) extraId: string,
+    @Body() createCheckInDto: CreateCheckInDto,
+  ) {
+    return this.checkInService.validateExtra(
+      eventId,
+      extraId,
+      createCheckInDto,
+    );
   }
 }
