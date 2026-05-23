@@ -91,6 +91,65 @@ export class CheckInController {
     return this.checkInService.confirm(eventId, createCheckInDto);
   }
 
+  @Patch('cancelar')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary: 'Cancela o credenciamento da inscrição associada ao QR code.',
+    description:
+      'Reverte `credenciamentoRealizado` para `false` e limpa `credenciamentoEm`. Retorna `400` se o credenciamento ainda não tiver sido realizado.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Credenciamento cancelado com sucesso.',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Credenciamento ainda não realizado ou inscrição não está confirmada.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Evento ou inscrição não encontrada para o QR code informado.',
+  })
+  cancel(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Body() createCheckInDto: CreateCheckInDto,
+  ) {
+    return this.checkInService.cancel(eventId, createCheckInDto);
+  }
+
+  @Patch('/extra/:extraId/cancelar')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary:
+      'Cancela o credenciamento da inscrição em um extra específico.',
+    description:
+      'Reverte `credenciamentoRealizado` para `false` e limpa `credenciamentoEm` no vínculo `inscricao_extra_participante`. Retorna `400` se o credenciamento do extra ainda não tiver sido realizado.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Credenciamento do extra cancelado com sucesso.',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Credenciamento do extra ainda não realizado ou inscrição não está confirmada.',
+  })
+  @ApiResponse({
+    status: 404,
+    description:
+      'Evento, extra ou inscrição não encontrada para o QR code informado.',
+  })
+  cancelExtra(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Param('extraId', ParseUUIDPipe) extraId: string,
+    @Body() createCheckInDto: CreateCheckInDto,
+  ) {
+    return this.checkInService.cancelExtra(eventId, extraId, createCheckInDto);
+  }
+
   @Post('/extra/:extraId/validar')
   @UseGuards(OrganizadorAuthGuard)
   @ApiOperation({

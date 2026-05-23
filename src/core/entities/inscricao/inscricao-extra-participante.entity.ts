@@ -31,7 +31,7 @@ export class InscricaoExtraParticipante extends BaseEntity {
   credenciamentoRealizado: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
-  credenciamentoEm: Date;
+  credenciamentoEm: Date | null;
 
   @Column()
   @CreateDateColumn()

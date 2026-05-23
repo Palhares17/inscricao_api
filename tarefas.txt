@@ -1,0 +1,88 @@
+Mapeei cada item da lista contra as rotas
+  existentes em src/organizers/. Segue o checklist:
+
+  ✅ Já feito
+
+  - Lista de atividades do evento — GET
+  /eventos/:eventoId/extras
+  (extras.controller.ts:69) já lista paginado as
+  atividades extras do evento.
+
+  - Obter participantes inscritos no evento — GET
+  /eventos/:eventoId/inscritos
+  (enrollments.controller.ts:59) lista paginado as
+  inscrições com dados do participante e modalidade.
+
+  - Fazer credenciamento de um participante do
+  evento usando QR code — POST
+  /eventos/:eventoId/check-in/validar + PATCH
+  /eventos/:eventoId/check-in/confirmar
+  (check-in.controller.ts:42 e :66) cobrem o fluxo
+  de credenciamento via QR.
+
+  ⚠️ Parcial
+
+  - Estatística de credenciamento — GET
+  /eventos/:eventoId/inscritos/contadores
+  (enrollments.controller.ts:42) já retorna total,
+  confirmados, pendentes, cancelados, credenciados e
+   certificadosEmitidos. Cobre o agregado básico —
+  se "estatística" no ClickUp implica breakdown por
+  extra, por modalidade, ou série temporal
+  (credenciados por hora/dia), aí falta.
+
+  - Cancelar credenciamento de um participante em
+  uma atividade (extra) — check-in.service.ts:83 tem
+   confirmExtra, mas não há rota exposta no
+  controller (check-in.controller.ts só tem
+  validateExtra). E não existe método de
+  cancelamento de credenciamento de extra — só de
+  confirmação.
+
+  ❌ Falta fazer
+
+  - Rota de organizador banir um participante — Não
+  existe. O campo Participante.ativo
+  (participante.entity.ts:41) existe no schema, mas
+  nenhuma rota lê/escreve nele.
+
+  - Cancelar credenciamento de um participante em um
+   evento — enrollments.controller.ts:79 cancela a
+  inscrição (statusDoParticipante = cancelado), mas
+  não há endpoint para reverter
+  credenciamentoRealizado voltando para false /
+  limpar credenciamentoEm.
+
+  - Lista de credenciamentos realizados em uma
+  atividade (extra) — Não existe endpoint que liste
+  quem foi credenciado em um extra específico
+  (filtrando
+  InscricaoExtraParticipante.credenciamentoRealizado
+   = true).
+
+  - Lista de credenciamentos realizados no evento —
+  findEnrollments lista todas as inscrições sem
+  filtro de credenciamento. Falta um endpoint
+  específico (ou um query param ?credenciado=true)
+  para a lista filtrada.
+
+  - Fazer credenciamento manual de um participante
+  no evento — Hoje só dá pra credenciar via
+  qrCodeToken. Falta uma rota tipo PATCH /eventos/:e
+  ventoId/inscritos/:inscricaoId/credenciar que
+  permita ao organizador credenciar pelo ID da
+  inscrição/participante (sem QR).
+  
+  - Confirmar credenciamento de extra (não estava
+  explícito na sua lista, mas tem o "gêmeo" do
+  manual) — confirmExtra existe no service mas não
+  está exposto no controller. Se "credenciamento
+  manual" também vale para atividade extra, ainda
+  falta a rota.
+
+  Resumo rápido
+
+  3 de 11 itens prontos, 2 parciais, 6 faltando
+  (descontando a duplicata do "credenciamento
+  manual" que aparece duas vezes na sua lista do
+  ClickUp).

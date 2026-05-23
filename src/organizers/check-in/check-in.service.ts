@@ -80,6 +80,67 @@ export class CheckInService {
     };
   }
 
+  async cancel(eventId: string, createCheckInDto: CreateCheckInDto) {
+    const enrollment = await this.findEnrollmentForCheckIn(
+      eventId,
+      createCheckInDto.qrCodeToken,
+    );
+
+    if (!enrollment.credenciamentoRealizado) {
+      throw new BadRequestException(
+        'Credenciamento ainda não foi realizado para esta inscrição.',
+      );
+    }
+
+    enrollment.credenciamentoRealizado = false;
+    enrollment.credenciamentoEm = null;
+    const saved = await this.enrollmentRepo.save(enrollment);
+
+    return {
+      ...this.checkInResponse(saved),
+      credenciado: saved.credenciamentoRealizado,
+      credenciadoEm: saved.credenciamentoEm,
+    };
+  }
+
+  async cancelExtra(
+    eventId: string,
+    extraId: string,
+    createCheckInDto: CreateCheckInDto,
+  ) {
+    const enrollment = await this.findEnrollmentForCheckIn(
+      eventId,
+      createCheckInDto.qrCodeToken,
+      { withExtras: true },
+    );
+
+    const extra = enrollment.extras.find((item) => item.extraId === extraId);
+    if (!extra) {
+      throw new NotFoundException('Extra não encontrado para esta inscrição.');
+    }
+
+    if (!extra.credenciamentoRealizado) {
+      throw new BadRequestException(
+        'Credenciamento do extra ainda não foi realizado.',
+      );
+    }
+
+    extra.credenciamentoRealizado = false;
+    extra.credenciamentoEm = null;
+    const saved = await this.extraParticipanteRepo.save(extra);
+
+    return {
+      ...this.checkInResponse(enrollment),
+      extra: {
+        id: extra.extraId,
+        nome: extra.extra.nome,
+        descricao: extra.extra.descricao,
+        credenciado: saved.credenciamentoRealizado,
+        credenciadoEm: saved.credenciamentoEm,
+      },
+    };
+  }
+
   async confirmExtra(
     eventId: string,
     extraId: string,
