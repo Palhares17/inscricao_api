@@ -194,7 +194,7 @@ export class CheckInService {
     };
   }
 
-  async listEventCredenciados(
+  async listEventCrendentials(
     eventId: string,
     paginationDto: PaginationDto,
   ): Promise<IPaginatedResult<unknown>> {

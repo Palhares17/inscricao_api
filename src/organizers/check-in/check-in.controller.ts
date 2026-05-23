@@ -170,7 +170,7 @@ export class CheckInController {
     @Param('eventoId', ParseUUIDPipe) eventId: string,
     @Query() paginationDto: PaginationDto,
   ) {
-    return this.checkInService.listEventCredenciados(eventId, paginationDto);
+    return this.checkInService.listEventCrendentials(eventId, paginationDto);
   }
 
   @Get('/extra/:extraId/credenciados')
