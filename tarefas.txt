@@ -37,6 +37,13 @@ Mapeei cada item da lista contra as rotas
   extra, por modalidade, ou série temporal
   (credenciados por hora/dia), aí falta.
 
+    - Cancelar credenciamento de um participante em um
+   evento — enrollments.controller.ts:79 cancela a
+  inscrição (statusDoParticipante = cancelado), mas
+  não há endpoint para reverter
+  credenciamentoRealizado voltando para false /
+  limpar credenciamentoEm.
+
 
   ⚠️ Parcial
 
@@ -46,13 +53,6 @@ Mapeei cada item da lista contra as rotas
   existe. O campo Participante.ativo
   (participante.entity.ts:41) existe no schema, mas
   nenhuma rota lê/escreve nele.
-
-  - Cancelar credenciamento de um participante em um
-   evento — enrollments.controller.ts:79 cancela a
-  inscrição (statusDoParticipante = cancelado), mas
-  não há endpoint para reverter
-  credenciamentoRealizado voltando para false /
-  limpar credenciamentoEm.
 
   - Lista de credenciamentos realizados em uma
   atividade (extra) — Não existe endpoint que liste

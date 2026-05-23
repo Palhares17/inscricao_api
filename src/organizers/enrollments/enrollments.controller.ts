@@ -126,4 +126,40 @@ export class EnrollmentsController {
   ) {
     return this.enrollmentsService.cancelEnrollment(eventoId, inscricaoId);
   }
+
+  @Patch('participantes/:participanteId/cancelar')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin)
+  @ApiOperation({
+    summary: 'Cancela a inscrição de um participante em um evento.',
+    description:
+      'Localiza a inscrição pelo par (`eventoId`, `participanteId`) — único pela constraint `uq_inscricao_evento_participante` — e define `statusDoParticipante = "cancelado"`. Útil para o fluxo "remover esta pessoa do meu evento" sem precisar do `inscricaoId`. Apenas usuários com papel `admin`. Retorna `400` se já estiver cancelada e `404` se o participante não tiver inscrição no evento.',
+  })
+  @ApiParam({
+    name: 'participanteId',
+    description: 'UUID do participante cuja inscrição será cancelada.',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Inscrição cancelada com sucesso.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Inscrição já está cancelada.',
+  })
+  @ApiResponse({
+    status: 404,
+    description:
+      'Evento não encontrado ou participante sem inscrição neste evento.',
+  })
+  cancelParticipantEnrollment(
+    @Param('eventoId', ParseUUIDPipe) eventoId: string,
+    @Param('participanteId', ParseUUIDPipe) participanteId: string,
+  ) {
+    return this.enrollmentsService.cancelParticipantEnrollment(
+      eventoId,
+      participanteId,
+    );
+  }
 }

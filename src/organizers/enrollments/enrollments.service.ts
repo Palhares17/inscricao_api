@@ -283,4 +283,41 @@ export class EnrollmentsService {
       },
     };
   }
+
+  async cancelParticipantEnrollment(eventoId: string, participanteId: string) {
+    const evento = await this.eventRepository.findOne({
+      where: { id: eventoId },
+    });
+    if (!evento) {
+      throw new NotFoundException('Evento não encontrado.');
+    }
+
+    const inscricao = await this.inscricaoRepo.findOne({
+      where: { eventoId, participanteId },
+    });
+    if (!inscricao) {
+      throw new NotFoundException(
+        'Participante não possui inscrição neste evento.',
+      );
+    }
+
+    if (inscricao.statusDoParticipante === StatusInscricaoEnum.Cancelado) {
+      throw new BadRequestException('Inscrição já está cancelada.');
+    }
+
+    inscricao.statusDoParticipante = StatusInscricaoEnum.Cancelado;
+    const saved = await this.inscricaoRepo.save(inscricao);
+
+    return {
+      data: {
+        id: saved.id,
+        eventoId: saved.eventoId,
+        participanteId: saved.participanteId,
+        modalidadeId: saved.modalidadeId,
+        statusDoParticipante: saved.statusDoParticipante,
+        credenciamentoRealizado: saved.credenciamentoRealizado,
+        updatedAt: saved.updatedAt,
+      },
+    };
+  }
 }
