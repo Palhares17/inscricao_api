@@ -160,6 +160,7 @@ export class EnrollmentsService {
           'iep."extraId" = e.id',
         )
         .where('e."eventoId" = :eventoId', { eventoId })
+        .andWhere('e."exigeCredenciamento" = true')
         .select('e.id', 'extraId')
         .addSelect('e.nome', 'nome')
         .addSelect('COUNT(iep.id)', 'totalParticipantes')

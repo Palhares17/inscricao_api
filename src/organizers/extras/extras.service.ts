@@ -89,6 +89,7 @@ export class ExtrasService {
       preco: isPaid ? createExtraDto.preco! : null,
       vagas: createExtraDto.vagas,
       vaiTerCertificado: createExtraDto.vaiTerCertificado,
+      exigeCredenciamento: createExtraDto.exigeCredenciamento ?? true,
       cargaHoraria: createExtraDto.vaiTerCertificado
         ? createExtraDto.cargaHoraria!
         : (null as unknown as Date),
@@ -111,6 +112,7 @@ export class ExtrasService {
         vagas: saved.vagas,
         vagasUtilizadas: saved.vagasUtilizadas,
         vaiTerCertificado: saved.vaiTerCertificado,
+        exigeCredenciamento: saved.exigeCredenciamento,
         cargaHoraria: saved.cargaHoraria,
         dataInicioDoExtra: saved.dataInicioDoExtra,
         dataFimDoExtra: saved.dataFimDoExtra,
@@ -210,6 +212,8 @@ export class ExtrasService {
       vagas: updateExtraDto.vagas ?? extra.vagas,
       vaiTerCertificado:
         updateExtraDto.vaiTerCertificado ?? extra.vaiTerCertificado,
+      exigeCredenciamento:
+        updateExtraDto.exigeCredenciamento ?? extra.exigeCredenciamento,
       cargaHoraria:
         updateExtraDto.cargaHoraria !== undefined
           ? updateExtraDto.cargaHoraria

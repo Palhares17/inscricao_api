@@ -83,6 +83,18 @@ export class CreateExtraDto {
 
   @ApiProperty({
     description:
+      'Indica se o extra exige credenciamento (check-in). Quando `false`, as rotas de validar/confirmar/cancelar credenciamento desse extra retornam `400` e o extra é omitido das estatísticas de credenciamento. Default `true`.',
+    example: true,
+    required: false,
+    default: true,
+    type: Boolean,
+  })
+  @IsOptional()
+  @IsBoolean()
+  exigeCredenciamento?: boolean;
+
+  @ApiProperty({
+    description:
       'Carga horária do extra (ISO 8601). Obrigatória quando `vaiTerCertificado` é `true`. Deve ser `null` caso contrário.',
     example: '2026-06-15T02:00:00.000Z',
     required: false,

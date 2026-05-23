@@ -54,8 +54,7 @@ Mapeei cada item da lista contra as rotas
   (participante.entity.ts:41) existe no schema, mas
   nenhuma rota lê/escreve nele.
 
-  - Lista de credenciamentos realizados em uma
-  atividade (extra) — Não existe endpoint que liste
+  - Lista de credenciamentos realizados em um extra — Não existe endpoint que liste
   quem foi credenciado em um extra específico
   (filtrando
   InscricaoExtraParticipante.credenciamentoRealizado

@@ -68,6 +68,10 @@ export class CheckInService {
       throw new NotFoundException('Extra não encontrado para esta inscrição.');
     }
 
+    if (!extra.extra.exigeCredenciamento) {
+      throw new BadRequestException('Este extra não exige credenciamento.');
+    }
+
     return {
       ...this.checkInResponse(enrollment),
       extra: {
@@ -119,6 +123,10 @@ export class CheckInService {
       throw new NotFoundException('Extra não encontrado para esta inscrição.');
     }
 
+    if (!extra.extra.exigeCredenciamento) {
+      throw new BadRequestException('Este extra não exige credenciamento.');
+    }
+
     if (!extra.credenciamentoRealizado) {
       throw new BadRequestException(
         'Credenciamento do extra ainda não foi realizado.',
@@ -155,6 +163,10 @@ export class CheckInService {
     const extra = enrollment.extras.find((item) => item.extraId === extraId);
     if (!extra) {
       throw new NotFoundException('Extra não encontrado para esta inscrição.');
+    }
+
+    if (!extra.extra.exigeCredenciamento) {
+      throw new BadRequestException('Este extra não exige credenciamento.');
     }
 
     if (extra.credenciamentoRealizado) {

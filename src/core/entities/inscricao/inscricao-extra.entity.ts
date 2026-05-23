@@ -38,6 +38,9 @@ export class InscricaoExtra extends BaseEntity {
   @Column()
   vaiTerCertificado: boolean;
 
+  @Column({ default: true })
+  exigeCredenciamento: boolean;
+
   @Column({ type: 'timestamp', nullable: true })
   cargaHoraria: Date | null;
 
