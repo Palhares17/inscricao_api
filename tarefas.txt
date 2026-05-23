@@ -20,17 +20,6 @@ Mapeei cada item da lista contra as rotas
   (check-in.controller.ts:42 e :66) cobrem o fluxo
   de credenciamento via QR.
 
-  ⚠️ Parcial
-
-  - Estatística de credenciamento — GET
-  /eventos/:eventoId/inscritos/contadores
-  (enrollments.controller.ts:42) já retorna total,
-  confirmados, pendentes, cancelados, credenciados e
-   certificadosEmitidos. Cobre o agregado básico —
-  se "estatística" no ClickUp implica breakdown por
-  extra, por modalidade, ou série temporal
-  (credenciados por hora/dia), aí falta.
-
   - Cancelar credenciamento de um participante em
   uma atividade (extra) — check-in.service.ts:83 tem
    confirmExtra, mas não há rota exposta no
@@ -39,7 +28,19 @@ Mapeei cada item da lista contra as rotas
   cancelamento de credenciamento de extra — só de
   confirmação.
 
-  ❌ Falta fazer
+    - Estatística de credenciamento — GET
+  /eventos/:eventoId/inscritos/contadores
+  (enrollments.controller.ts:42) já retorna total,
+  confirmados, pendentes, cancelados, credenciados e
+   certificadosEmitidos. Cobre o agregado básico —
+  se "estatística" no ClickUp implica breakdown por
+  extra, por modalidade, ou série temporal
+  (credenciados por hora/dia), aí falta.
+
+
+  ⚠️ Parcial
+
+  🛑 Falta fazer
 
   - Rota de organizador banir um participante — Não
   existe. O campo Participante.ativo
@@ -72,7 +73,7 @@ Mapeei cada item da lista contra as rotas
   ventoId/inscritos/:inscricaoId/credenciar que
   permita ao organizador credenciar pelo ID da
   inscrição/participante (sem QR).
-  
+
   - Confirmar credenciamento de extra (não estava
   explícito na sua lista, mas tem o "gêmeo" do
   manual) — confirmExtra existe no service mas não

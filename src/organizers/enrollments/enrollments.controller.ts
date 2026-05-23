@@ -56,6 +56,25 @@ export class EnrollmentsController {
     return this.enrollmentsService.getCounters(eventoId);
   }
 
+  @Get('inscritos/estatisticas')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary: 'Retorna estatísticas detalhadas de credenciamento do evento.',
+    description:
+      'Retorna `totalCredenciados`, breakdown `porModalidade` (com `totalInscritos`, `confirmados`, `credenciados` e `taxaCredenciamento`), `porExtra` (com `totalParticipantes`, `credenciados` e `taxaCredenciamento`), e séries temporais `credenciamentoPorDia` e `credenciamentoPorHora` baseadas em `credenciamentoEm`. Taxa = credenciados / (confirmados | totalParticipantes), arredondada em 4 casas.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estatísticas retornadas com sucesso.',
+  })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado.' })
+  getStatistics(@Param('eventoId', ParseUUIDPipe) eventoId: string) {
+    // NOTE: The shape and breakdowns of the data returned by this endpoint
+    // (per-modalidade, per-extra, daily and hourly time series) were designed by an AI.
+    return this.enrollmentsService.getStatistics(eventoId);
+  }
+
   @Get('inscritos')
   @UseGuards(OrganizadorAuthGuard)
   @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
