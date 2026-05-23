@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -19,6 +21,7 @@ import { CreateCheckInDto } from './dto/create-check-in.dto';
 import { OrganizadorAuthGuard } from 'src/core/guards/organizador-auth.guard';
 import { Roles } from 'src/core/decorators/roles.decorator';
 import { OrganizadorRolesEnum } from 'src/core/enum/organizador-roles.enum';
+import { PaginationDto } from 'src/core/utils/pagination.dto';
 
 @ApiTags('Check-in')
 @ApiBearerAuth('access-token')
@@ -123,8 +126,7 @@ export class CheckInController {
   @UseGuards(OrganizadorAuthGuard)
   @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
   @ApiOperation({
-    summary:
-      'Cancela o credenciamento da inscrição em um extra específico.',
+    summary: 'Cancela o credenciamento da inscrição em um extra específico.',
     description:
       'Reverte `credenciamentoRealizado` para `false` e limpa `credenciamentoEm` no vínculo `inscricao_extra_participante`. Retorna `400` se o credenciamento do extra ainda não tiver sido realizado.',
   })
@@ -148,6 +150,55 @@ export class CheckInController {
     @Body() createCheckInDto: CreateCheckInDto,
   ) {
     return this.checkInService.cancelExtra(eventId, extraId, createCheckInDto);
+  }
+
+  @Get('credenciados')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary:
+      'Lista paginada de inscrições com credenciamento realizado no evento.',
+    description:
+      'Retorna a paginação no formato `IPaginatedResult` (`data`, `totalItems`, `totalPages`, `currentPage`, `itemsPerPage`). Cada item inclui `participante`, `modalidade`, `inscricaoId`, `status` e `credenciadoEm`. Ordenado por `credenciamentoEm` (DESC por padrão).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista paginada retornada com sucesso.',
+  })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado.' })
+  listEventCredenciados(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.checkInService.listEventCredenciados(eventId, paginationDto);
+  }
+
+  @Get('/extra/:extraId/credenciados')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary: 'Lista paginada de credenciados em um extra específico.',
+    description:
+      'Retorna a paginação no formato `IPaginatedResult` (`data`, `totalItems`, `totalPages`, `currentPage`, `itemsPerPage`). Cada item inclui `participante`, `modalidade`, `inscricaoId`, `extra` (id/nome/descricao) e `credenciadoEm`. Ordenado por `credenciamentoEm` (DESC por padrão).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista paginada retornada com sucesso.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Evento ou extra não encontrado.',
+  })
+  listExtraCrendentials(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Param('extraId', ParseUUIDPipe) extraId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.checkInService.ListExtraCrendentials(
+      eventId,
+      extraId,
+      paginationDto,
+    );
   }
 
   @Post('/extra/:extraId/validar')

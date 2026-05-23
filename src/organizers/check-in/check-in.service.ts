@@ -6,16 +6,21 @@ import {
 import { CreateCheckInDto } from './dto/create-check-in.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Inscricao } from 'src/core/entities/inscricao/inscricao.entity';
+import { InscricaoExtra } from 'src/core/entities/inscricao/inscricao-extra.entity';
 import { InscricaoExtraParticipante } from 'src/core/entities/inscricao/inscricao-extra-participante.entity';
 import { Evento } from 'src/core/entities/evento/evento.entity';
 import { FindOptionsRelations, Repository } from 'typeorm';
 import { StatusInscricaoEnum } from 'src/core/enum/status-inscricao.enum';
+import { OrderEnum, PaginationDto } from 'src/core/utils/pagination.dto';
+import { IPaginatedResult } from 'src/core/utils/pagination.interface';
 
 @Injectable()
 export class CheckInService {
   constructor(
     @InjectRepository(Inscricao)
     private readonly enrollmentRepo: Repository<Inscricao>,
+    @InjectRepository(InscricaoExtra)
+    private readonly extraRepo: Repository<InscricaoExtra>,
     @InjectRepository(InscricaoExtraParticipante)
     private readonly extraParticipanteRepo: Repository<InscricaoExtraParticipante>,
     @InjectRepository(Evento)
@@ -186,6 +191,96 @@ export class CheckInService {
         credenciado: saved.credenciamentoRealizado,
         credenciadoEm: saved.credenciamentoEm,
       },
+    };
+  }
+
+  async listEventCredenciados(
+    eventId: string,
+    paginationDto: PaginationDto,
+  ): Promise<IPaginatedResult<unknown>> {
+    const event = await this.eventRepo.findOne({ where: { id: eventId } });
+    if (!event) {
+      throw new NotFoundException('Evento não encontrado.');
+    }
+
+    const { page = 1, limit = 10, order = OrderEnum.DESC } = paginationDto;
+
+    const [items, total] = await this.enrollmentRepo.findAndCount({
+      where: { eventoId: eventId, credenciamentoRealizado: true },
+      relations: { participante: { dados: true }, modalidade: true },
+      order: { credenciamentoEm: order },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const data = items.map((enrollment) => ({
+      ...this.checkInResponse(enrollment),
+      inscricaoId: enrollment.id,
+      credenciadoEm: enrollment.credenciamentoEm,
+    }));
+
+    return {
+      data,
+      totalItems: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      itemsPerPage: limit,
+    };
+  }
+
+  async ListExtraCrendentials(
+    eventId: string,
+    extraId: string,
+    paginationDto: PaginationDto,
+  ): Promise<IPaginatedResult<unknown>> {
+    const event = await this.eventRepo.findOne({ where: { id: eventId } });
+    if (!event) {
+      throw new NotFoundException('Evento não encontrado.');
+    }
+
+    const extraEntity = await this.extraRepo.findOne({
+      where: { id: extraId, eventoId: eventId },
+    });
+    if (!extraEntity) {
+      throw new NotFoundException('Extra não encontrado para este evento.');
+    }
+
+    const { page = 1, limit = 10, order = OrderEnum.DESC } = paginationDto;
+
+    const [items, total] = await this.extraParticipanteRepo.findAndCount({
+      where: {
+        extraId,
+        credenciamentoRealizado: true,
+        inscricao: { eventoId: eventId },
+      },
+      relations: {
+        inscricao: {
+          participante: { dados: true },
+          modalidade: true,
+        },
+      },
+      order: { credenciamentoEm: order },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const data = items.map((item) => ({
+      ...this.checkInResponse(item.inscricao),
+      inscricaoId: item.inscricaoId,
+      extra: {
+        id: extraEntity.id,
+        nome: extraEntity.nome,
+        descricao: extraEntity.descricao,
+      },
+      credenciadoEm: item.credenciamentoEm,
+    }));
+
+    return {
+      data,
+      totalItems: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      itemsPerPage: limit,
     };
   }
 
