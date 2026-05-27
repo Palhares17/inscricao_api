@@ -44,16 +44,6 @@ Mapeei cada item da lista contra as rotas
   credenciamentoRealizado voltando para false /
   limpar credenciamentoEm.
 
-
-  ⚠️ Parcial
-
-  🛑 Falta fazer
-
-  - Rota de organizador banir um participante — Não
-  existe. O campo Participante.ativo
-  (participante.entity.ts:41) existe no schema, mas
-  nenhuma rota lê/escreve nele.
-
   - Lista de credenciamentos realizados em um extra — Não existe endpoint que liste
   quem foi credenciado em um extra específico
   (filtrando
@@ -65,6 +55,15 @@ Mapeei cada item da lista contra as rotas
   filtro de credenciamento. Falta um endpoint
   específico (ou um query param ?credenciado=true)
   para a lista filtrada.
+
+  ⚠️ Parcial
+
+  🛑 Falta fazer
+
+  - Rota de organizador banir um participante — Não
+  existe. O campo Participante.ativo
+  (participante.entity.ts:41) existe no schema, mas
+  nenhuma rota lê/escreve nele.
 
   - Fazer credenciamento manual de um participante
   no evento — Hoje só dá pra credenciar via

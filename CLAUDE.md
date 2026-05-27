@@ -58,8 +58,8 @@ NestJS 11 HTTP service (Express platform) backed by Postgres via TypeORM 0.3, wi
 Three feature roots plus the global core layer:
 
 - **`AuthModule`** (`src/core/auth/auth.module.ts`) — global `JwtModule.registerAsync({ global: true })` + `PassportModule.register({ defaultStrategy: 'organizador' })`. Registers only the `OrganizadorJwtStrategy` and `OrganizadorAuthGuard` providers; exports `OrganizadorAuthGuard`, `JwtModule`, `PassportModule`. The participant strategy is registered in a *different* module (see below) — this module is organizer-side only despite the generic name.
-- **`ParticipantsModule`** (`src/participants/participants.module.ts`) — wires `EventosModule`, `EnrollmentsModule`, `AuthModule` (participant-side, see below), and `ParticipantModule`. Participant signup/signin lives here, not in the core `AuthModule`.
-- **`OrganizersModule`** (`src/organizers/organizers.module.ts`) — wires `ClientModule`, `RegisterModule`, `ExtrasModule`, `EnrollmentsModule` (organizer-facing list/manage views over the same `Inscricao` entity used by participants).
+- **`ParticipantsModule`** (`src/participants/participants.module.ts`) — wires `EventosModule`, `EnrollmentsModule`, `AuthModule` (participant-side, see below), `ParticipantModule`, and `ExtrasModule` (note: a participant-side `ExtrasModule` exists separately from the organizer one). Participant signup/signin lives here, not in the core `AuthModule`.
+- **`OrganizersModule`** (`src/organizers/organizers.module.ts`) — wires `ClientModule`, `CategoryModule`, `ExtrasModule`, `EnrollmentsModule`, `CheckInModule`. `EnrollmentsModule` exposes organizer-facing list/manage views over the same `Inscricao` entity used by participants; `CheckInModule` handles credenciamento (check-in), extra credentialing, cancellation, and enrollment statistics routes.
 
 New feature modules go under `src/<area>/<sub-area>/` and are imported into either `ParticipantsModule` / `OrganizersModule` (or directly into `AppModule` for cross-cutting roots).
 
@@ -74,6 +74,7 @@ Shared infra that other modules depend on:
 - `decorators/roles.decorator.ts` — `@Roles(...OrganizadorRolesEnum[])` writes the `'roles'` metadata key the organizer guard reads.
 - `types/jwt-payload.type.ts` — `{ sub: string; role: string; iat?, exp? }`. Note: neither strategy actually returns this type any more (both do a DB lookup and return entities); this interface mostly documents the wire format.
 - `enum/` — `organizador-roles.enum.ts` (RBAC: `admin`, `organizador`, `chair`) and `metodo-pagamento.enum.ts`.
+- `utils/pagination.dto.ts` — shared `PaginationDto` (`page`, `limit` max 100, `order` via `OrderEnum` ASC/DESC, `search`) plus `pagination.interface.ts`. Used as a `@Query()` DTO by organizer list routes (e.g. check-in/enrollments); reuse it rather than re-declaring pagination params.
 
 ### Auth strategies (`src/core/auth/strategies/` + `src/core/guards/`)
 

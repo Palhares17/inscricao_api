@@ -94,6 +94,33 @@ export class CheckInController {
     return this.checkInService.confirm(eventId, createCheckInDto);
   }
 
+  @Post('checkin-manual')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary: 'Realiza o credenciamento manual de um participante.',
+    description:
+      'Permite que o organizador informe o email do participante para realizar o credenciamento manualmente. Retorna os mesmos dados da validação por QR code. Retorna `400` se o participante não tiver inscrição confirmada ou já tiver sido credenciado.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Credenciamento manual realizado com sucesso.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Participante sem inscrição confirmada ou já credenciado.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Evento ou participante não encontrado.',
+  })
+  manualCheckIn(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Body('participantId') participantId: string,
+  ) {
+    return this.checkInService.manualCheckIn(eventId, participantId);
+  }
+
   @Patch('cancelar')
   @UseGuards(OrganizadorAuthGuard)
   @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
@@ -120,57 +147,6 @@ export class CheckInController {
     @Body() createCheckInDto: CreateCheckInDto,
   ) {
     return this.checkInService.cancel(eventId, createCheckInDto);
-  }
-
-  @Patch('/extra/:extraId/cancelar')
-  @UseGuards(OrganizadorAuthGuard)
-  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
-  @ApiOperation({
-    summary: 'Cancela o credenciamento da inscrição em um extra específico.',
-    description:
-      'Reverte `credenciamentoRealizado` para `false` e limpa `credenciamentoEm` no vínculo `inscricao_extra_participante`. Retorna `400` se o credenciamento do extra ainda não tiver sido realizado.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Credenciamento do extra cancelado com sucesso.',
-  })
-  @ApiResponse({
-    status: 400,
-    description:
-      'Credenciamento do extra ainda não realizado ou inscrição não está confirmada.',
-  })
-  @ApiResponse({
-    status: 404,
-    description:
-      'Evento, extra ou inscrição não encontrada para o QR code informado.',
-  })
-  cancelExtra(
-    @Param('eventoId', ParseUUIDPipe) eventId: string,
-    @Param('extraId', ParseUUIDPipe) extraId: string,
-    @Body() createCheckInDto: CreateCheckInDto,
-  ) {
-    return this.checkInService.cancelExtra(eventId, extraId, createCheckInDto);
-  }
-
-  @Get('credenciados')
-  @UseGuards(OrganizadorAuthGuard)
-  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
-  @ApiOperation({
-    summary:
-      'Lista paginada de inscrições com credenciamento realizado no evento.',
-    description:
-      'Retorna a paginação no formato `IPaginatedResult` (`data`, `totalItems`, `totalPages`, `currentPage`, `itemsPerPage`). Cada item inclui `participante`, `modalidade`, `inscricaoId`, `status` e `credenciadoEm`. Ordenado por `credenciamentoEm` (DESC por padrão).',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista paginada retornada com sucesso.',
-  })
-  @ApiResponse({ status: 404, description: 'Evento não encontrado.' })
-  listEventCredenciados(
-    @Param('eventoId', ParseUUIDPipe) eventId: string,
-    @Query() paginationDto: PaginationDto,
-  ) {
-    return this.checkInService.listEventCrendentials(eventId, paginationDto);
   }
 
   @Get('/extra/:extraId/credenciados')
@@ -227,6 +203,120 @@ export class CheckInController {
       eventId,
       extraId,
       createCheckInDto,
+    );
+  }
+
+  @Post('/extra/:extraId/confirmar')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary: 'Confirma o credenciamento para um extra específico.',
+    description:
+      'Marca `credenciamentoRealizado = true` e preenche `credenciamentoEm` no vínculo `inscricao_extra_participante`. Retorna `400` se o credenciamento do extra já tiver sido realizado.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Credenciamento do extra confirmado com sucesso.',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Credenciamento do extra já realizado ou inscrição não está confirmada para o extra.',
+  })
+  @ApiResponse({
+    status: 404,
+    description:
+      'Evento, extra ou inscrição não encontrada para o QR code informado.',
+  })
+  confirmExtra(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Param('extraId', ParseUUIDPipe) extraId: string,
+    @Body() createCheckInDto: CreateCheckInDto,
+  ) {
+    return this.checkInService.confirmExtra(eventId, extraId, createCheckInDto);
+  }
+
+  @Patch('/extra/:extraId/cancelar')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary: 'Cancela o credenciamento da inscrição em um extra específico.',
+    description:
+      'Reverte `credenciamentoRealizado` para `false` e limpa `credenciamentoEm` no vínculo `inscricao_extra_participante`. Retorna `400` se o credenciamento do extra ainda não tiver sido realizado.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Credenciamento do extra cancelado com sucesso.',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Credenciamento do extra ainda não realizado ou inscrição não está confirmada.',
+  })
+  @ApiResponse({
+    status: 404,
+    description:
+      'Evento, extra ou inscrição não encontrada para o QR code informado.',
+  })
+  cancelExtra(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Param('extraId', ParseUUIDPipe) extraId: string,
+    @Body() createCheckInDto: CreateCheckInDto,
+  ) {
+    return this.checkInService.cancelExtra(eventId, extraId, createCheckInDto);
+  }
+
+  @Get('credenciados')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary:
+      'Lista paginada de inscrições com credenciamento realizado no evento.',
+    description:
+      'Retorna a paginação no formato `IPaginatedResult` (`data`, `totalItems`, `totalPages`, `currentPage`, `itemsPerPage`). Cada item inclui `participante`, `modalidade`, `inscricaoId`, `status` e `credenciadoEm`. Ordenado por `credenciamentoEm` (DESC por padrão).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista paginada retornada com sucesso.',
+  })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado.' })
+  listEventCredenciados(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.checkInService.listEventCrendentials(eventId, paginationDto);
+  }
+
+  @Post('extra/:extraId/checkin-manual')
+  @UseGuards(OrganizadorAuthGuard)
+  @Roles(OrganizadorRolesEnum.Admin, OrganizadorRolesEnum.Organizador)
+  @ApiOperation({
+    summary: 'Realiza o credenciamento manual em um extra específico.',
+    description:
+      'Permite que o organizador informe o email do participante para realizar o credenciamento manualmente em um extra. Retorna os mesmos dados da validação por QR code para aquele extra. Retorna `400` se o participante não tiver inscrição confirmada para o extra ou já tiver sido credenciado no extra.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Credenciamento manual do extra realizado com sucesso.',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Participante sem inscrição confirmada para o extra ou já credenciado no extra.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Evento, extra ou participante não encontrado.',
+  })
+  manualCheckInExtra(
+    @Param('eventoId', ParseUUIDPipe) eventId: string,
+    @Param('extraId', ParseUUIDPipe) extraId: string,
+    @Body('participantId') participantId: string,
+  ) {
+    return this.checkInService.manualCheckInExtra(
+      eventId,
+      extraId,
+      participantId,
     );
   }
 }
